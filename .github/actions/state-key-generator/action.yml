@@ -1,0 +1,14 @@
+name: State Key Generator
+inputs:
+  env:
+    required: true
+  service:
+    required: true
+
+outputs:
+  key:
+    description: state key
+
+runs:
+  using: node16
+  main: index.js

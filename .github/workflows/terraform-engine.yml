@@ -1,0 +1,46 @@
+on:
+  workflow_call:
+    inputs:
+      env:
+        required: true
+        type: string
+
+jobs:
+  terraform:
+    runs-on: self-hosted
+    environment: 
+      name: ${{ inputs.env }}
+
+    steps:
+      - name: Checkout Repository
+        uses: ./.github/actions/repo-checkout
+        with:
+          repo: ${{ github.repository }}
+          ref: ${{ github.sha }}
+
+      - name: AWS Auth via OIDC
+        uses: ./.github/actions/aws-auth-oidc
+        with:
+          role-to-assume: arn:aws:iam::123456789012:role/github-terraform-role
+          aws-region: ap-south-1
+
+      - name: RBAC Check
+        uses: ./.github/actions/rbac-check
+
+      - name: Terraform Validator
+        uses: ./.github/actions/tf-validator
+        with:
+          env: ${{ inputs.env }}
+
+      - name: State Key Generator
+        id: state
+        uses: ./.github/actions/state-key-generator
+        with:
+          env: ${{ inputs.env }}
+          service: app
+
+      - name: Terraform Wrapper
+        uses: ./.github/actions/terraform-wrapper
+        with:
+          env: ${{ inputs.env }}
+          state_key: ${{ steps.state.outputs.key }}

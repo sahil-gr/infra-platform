@@ -1,0 +1,15 @@
+name: AWS Auth OIDC
+
+description: Authenticate to AWS using GitHub OIDC
+
+inputs:
+  role-to-assume:
+    required: true
+    description: IAM Role ARN
+  aws-region:
+    required: true
+    description: AWS Region
+
+runs:
+  using: node16
+  main: index.js

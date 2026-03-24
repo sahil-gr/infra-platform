@@ -1,0 +1,36 @@
+name: Infra Orchestrator
+
+on:
+  push:
+    paths:
+      - 'envs/*.tfvars'
+
+permissions:
+  id-token: write   
+  contents: read
+
+jobs:
+  detect:
+    runs-on: self-hosted
+    outputs:
+      env: ${{ steps.detect.outputs.env }}
+
+    steps:
+      - name: Checkout Repository
+        uses: ./.github/actions/repo-checkout
+        with:
+          repo: ${{ github.repository }}
+          ref: ${{ github.sha }}
+
+      - name: Detect Environment
+        id: detect
+        run: |
+          FILE=$(git diff --name-only HEAD~1 | grep envs/ | head -n 1)
+          ENV=$(basename $FILE .tfvars)
+          echo "env=$ENV" >> $GITHUB_OUTPUT
+
+  call-engine:
+    needs: detect
+    uses: ./.github/workflows/terraform-engine.yml
+    with:
+      env: ${{ needs.detect.outputs.env }}
